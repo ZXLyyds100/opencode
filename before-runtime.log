@@ -1,0 +1,4 @@
+timestamp=2026-10-16T22:51:59.373Z level=INFO run=proof message="database schema bootstrap started" migrations=50 role=server
+timestamp=2026-10-16T22:51:59.377Z level=INFO run=proof message="database schema bootstrap completed" migrations=50 durationMs=4 role=server
+timestamp=2026-10-16T22:51:59.379Z level=INFO run=proof message="boundary probe started" fixture="isolated synthetic Permission.Service" role=server
+timestamp=2026-10-16T22:51:59.385Z level=INFO run=proof message="boundary probe finished" pending=0 role=server

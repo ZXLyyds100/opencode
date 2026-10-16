@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenCode #56247 — permission diagnostics evidence</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; background: #f8f9fb; color: #19212d; font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 1440px; margin: auto; }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    p { margin: 8px 0 16px; }
+    .boundary { padding: 14px 18px; background: #fff5df; border: 1px solid #e7d5a7; }
+    nav { display: flex; gap: 10px; margin: 24px 0 18px; }
+    button { padding: 9px 22px; border: 1px solid #b6bfcc; border-radius: 5px; background: white; color: #19212d; font: inherit; cursor: pointer; }
+    button[aria-pressed="true"] { background: #19212d; color: white; border-color: #19212d; }
+    .summary { display: flex; gap: 30px; padding: 16px 20px; background: white; border: 1px solid #d5dae2; }
+    .summary strong { display: block; font-size: 26px; }
+    .summary span { color: #4e5969; font-size: 14px; }
+    h2 { margin-bottom: 8px; font-size: 19px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 18px 20px; border: 1px solid #d5dae2; background: white; font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .meta { color: #4e5969; font-size: 13px; }
+    a { color: #174d96; }
+  </style>
+  <main>
+    <h1>OpenCode #56247 · Permission diagnostics</h1>
+    <p class="boundary"><strong>Local boundary evidence, not a product UI.</strong> The same script exercises the real Permission.Service, SQLite and production file logger in two isolated checkouts. Synthetic session and hook; no live model, HTTP/TUI end-to-end run, or user data. The script explicitly supplies the <code>role=server</code> log annotation.</p>
+    <nav aria-label="Evidence version">
+      <button id="before" aria-pressed="true">Before · unchanged dev</button>
+      <button id="after" aria-pressed="false">After · permission fix</button>
+    </nav>
+    <section class="summary" aria-label="Measured results">
+      <div><strong id="diagnostics">Loading…</strong><span>permission diagnostics</span></div>
+      <div><strong id="decisions">Loading…</strong><span>actual permission decisions</span></div>
+      <div><strong id="privacy">Loading…</strong><span>private sentinel leakage</span></div>
+      <div><strong id="pending">Loading…</strong><span>pending after close</span></div>
+    </section>
+    <h2 id="label">Original captured output</h2>
+    <p class="meta">Original outputs: <a href="before.log">before.log</a> · <a href="after.log">after.log</a> · <a href="repro.mjs">repro.mjs</a>. Counts below are parsed from the captured output; log text is not rewritten.</p>
+    <pre id="output" aria-live="polite">Loading captured output…</pre>
+  </main>
+  <script type="module">
+    const files = await Promise.all(["before", "after"].map(async (version) => {
+      const response = await fetch(`${version}.log`);
+      if (!response.ok) throw new Error(`Cannot read ${version}.log`);
+      return [version, await response.text()];
+    }));
+    const logs = Object.fromEntries(files);
+    function show(version) {
+      const log = logs[version];
+      const values = JSON.parse(log.match(/^Decisions: (.+)$/m)[1]);
+      document.querySelector("#diagnostics").textContent = log.match(/^Permission diagnostics: (\d+)$/m)[1];
+      document.querySelector("#decisions").textContent = values.length;
+      document.querySelector("#privacy").textContent = log.match(/^Private payload leakage: ([^;]+)/m)[1];
+      document.querySelector("#pending").textContent = log.match(/pending requests after close: (\d+)/)[1];
+      document.querySelector("#label").textContent = version === "before" ? "Before — no permission diagnostics" : "After — evaluation, prompt and reply diagnostics";
+      document.querySelector("#output").textContent = log;
+      for (const name of ["before", "after"]) document.querySelector(`#${name}`).setAttribute("aria-pressed", String(name === version));
+    }
+    for (const version of ["before", "after"]) document.querySelector(`#${version}`).addEventListener("click", () => show(version));
+    show("before");
+  </script>
+</html>

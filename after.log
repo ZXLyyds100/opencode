@@ -1,0 +1,27 @@
+Boundary: real Permission.Service + SQLite + production file logger
+Fixture only; no live model, product UI, or user session
+Base: 4e95dacd8170b56567a83006fef88451d3c22739
+Source SHA256: e1baf22334bd2d84d5ba320ead6ee626d9a98238e1b1b2642fa10f1cc33df56d
+Decisions: [{"id":"per_configured_allow","effect":"allow"},{"id":"per_once","effect":"ask"},{"id":"per_always","effect":"ask"},{"id":"per_saved_allow","effect":"allow"},{"id":"per_configured_deny","effect":"deny"},{"id":"per_reject","effect":"ask"},{"id":"per_hook_deny","effect":"deny"},{"id":"per_shutdown","effect":"ask"}]
+Permission diagnostics: 16
+Private payload leakage: none; pending requests after close: 0
+timestamp=2026-10-16T22:51:32.335Z level=INFO run=proof message="database schema bootstrap started" migrations=50 role=server
+timestamp=2026-10-16T22:51:32.340Z level=INFO run=proof message="database schema bootstrap completed" migrations=50 durationMs=5 role=server
+timestamp=2026-10-16T22:51:32.342Z level=INFO run=proof message="boundary probe started" fixture="isolated synthetic Permission.Service" role=server
+timestamp=2026-10-16T22:51:32.345Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=read effect=allow ruleEffect=allow rule=0 rules=1 role=server
+timestamp=2026-10-16T22:51:32.345Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=read effect=ask ruleEffect=ask rule=-1 rules=0 role=server
+timestamp=2026-10-16T22:51:32.345Z level=INFO run=proof message="permission asking" sessionID=ses_permission_proof id=per_once permission=read role=server
+timestamp=2026-10-16T22:51:32.346Z level=INFO run=proof message="permission replied" sessionID=ses_permission_proof id=per_once reply=once role=server
+timestamp=2026-10-16T22:51:32.346Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=read effect=ask ruleEffect=ask rule=-1 rules=0 role=server
+timestamp=2026-10-16T22:51:32.346Z level=INFO run=proof message="permission asking" sessionID=ses_permission_proof id=per_always permission=read role=server
+timestamp=2026-10-16T22:51:32.346Z level=INFO run=proof message="permission replied" sessionID=ses_permission_proof id=per_always reply=always role=server
+timestamp=2026-10-16T22:51:32.346Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=read effect=allow ruleEffect=allow rule=0 rules=1 role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=read effect=deny ruleEffect=deny rule=0 rules=1 role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=write effect=ask ruleEffect=ask rule=-1 rules=1 role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission asking" sessionID=ses_permission_proof id=per_reject permission=write role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission replied" sessionID=ses_permission_proof id=per_reject reply=reject role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=read effect=deny ruleEffect=allow rule=0 rules=1 role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission evaluated" sessionID=ses_permission_proof permission=write effect=ask ruleEffect=ask rule=-1 rules=1 role=server
+timestamp=2026-10-16T22:51:32.347Z level=INFO run=proof message="permission asking" sessionID=ses_permission_proof id=per_shutdown permission=write role=server
+timestamp=2026-10-16T22:51:32.348Z level=INFO run=proof message="permission replied" sessionID=ses_permission_proof id=per_shutdown reply=reject role=server
+timestamp=2026-10-16T22:51:32.348Z level=INFO run=proof message="boundary probe finished" pending=0 role=server
