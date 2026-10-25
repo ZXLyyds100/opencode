@@ -11,6 +11,7 @@ export async function mountCommands() {
   document.body.append(element)
   const selected: string[] = []
   let settings: ReturnType<typeof useSettings> | undefined
+  let contextual = false
 
   function Probe() {
     const commands = useCommand()
@@ -18,6 +19,13 @@ export async function mountCommands() {
     settings.keybinds.set("command.palette", "ctrl+k")
     commands.register("layout-fixture", () => [
       { id: "find", title: "Find", keybind: "ctrl+f", onSelect: () => void selected.push("find") },
+      {
+        id: "context",
+        title: "Context",
+        keybind: "ctrl+f",
+        when: () => contextual,
+        onSelect: () => void selected.push("context"),
+      },
       { id: "custom", title: "Custom", keybind: "none", onSelect: () => void selected.push("custom") },
       { id: "command.palette", title: "Palette", onSelect: () => void selected.push("palette") },
     ])
@@ -48,6 +56,9 @@ export async function mountCommands() {
     selected,
     set(action: string, bind: string) {
       settings!.keybinds.set(action, bind)
+    },
+    context(active: boolean) {
+      contextual = active
     },
     send(input: KeyboardEventInit) {
       const event = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...input })

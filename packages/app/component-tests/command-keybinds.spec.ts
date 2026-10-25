@@ -4,7 +4,7 @@ import { expect, sourceURL, story } from "../../storybook/playwright/story"
 const fixture = sourceURL(new URL("./command-keybinds.fixture.tsx", import.meta.url))
 
 story(
-  "non-Latin fallback dispatches commands and palette while exact custom bindings take priority",
+  "non-Latin fallback respects command context, exact custom bindings and palette priority",
   async ({ mount, page }) => {
     await mount("ui-line-comment--editor")
 
@@ -14,6 +14,10 @@ story(
 
       try {
         const prevented = [host.send({ key: "а", code: "KeyF", ctrlKey: true })]
+        host.context(true)
+        prevented.push(host.send({ key: "а", code: "KeyF", ctrlKey: true }))
+        host.context(false)
+        prevented.push(host.send({ key: "а", code: "KeyF", ctrlKey: true }))
         host.set("custom", "ctrl+а")
         prevented.push(host.send({ key: "а", code: "KeyF", ctrlKey: true }))
         host.set("custom", "ctrl+л")
@@ -30,7 +34,7 @@ story(
       }
     }, fixture)
 
-    expect(result.selected).toEqual(["find", "custom", "custom", "palette", "palette"])
-    expect(result.prevented).toEqual([true, true, true, true, true])
+    expect(result.selected).toEqual(["find", "context", "find", "custom", "custom", "palette", "palette"])
+    expect(result.prevented).toEqual([true, true, true, true, true, true, true])
   },
 )
