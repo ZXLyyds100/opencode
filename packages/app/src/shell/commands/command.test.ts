@@ -7,6 +7,7 @@ import {
   CommandCatalog,
   commandKeymap,
   formatKeybind,
+  keyFromKeyboardEvent,
   matchKeybind,
   parseKeybind,
   resolveKeybindOption,
@@ -146,7 +147,10 @@ describe("command keybinds", () => {
     { config: "ctrl+[", event: { key: "х", code: "BracketLeft", ctrlKey: true, isComposing: true }, match: false },
     { config: "ctrl+f", event: { key: "Dead", code: "KeyF", ctrlKey: true }, match: false },
     { config: "ctrl+f", event: { key: "Unidentified", code: "KeyF", ctrlKey: true }, match: false },
-    { config: "ctrl+alt+[", event: { key: "х", code: "BracketLeft", ctrlKey: true, altKey: true }, match: false },
+    // Preserve the bracket fallback that already supports macOS Option and explicit Ctrl+Alt bindings.
+    { config: "meta+alt+[", event: { key: "“", code: "BracketLeft", metaKey: true, altKey: true }, match: true },
+    { config: "meta+alt+]", event: { key: "‘", code: "BracketRight", metaKey: true, altKey: true }, match: true },
+    { config: "ctrl+alt+[", event: { key: "х", code: "BracketLeft", ctrlKey: true, altKey: true }, match: true },
     {
       config: "ctrl+[",
       event: { key: "х", code: "BracketLeft", ctrlKey: true, modifierAltGraph: true },
@@ -155,9 +159,21 @@ describe("command keybinds", () => {
   ])("matchKeybind $config with $event.key is $match", (row) => {
     const event = new KeyboardEvent("keydown", row.event)
 
-    // happy-dom does not implement modifierAltGraph.
-    if ("modifierAltGraph" in row.event) event.getModifierState = (key) => key === "AltGraph"
+    // happy-dom treats every Alt key as AltGraph and ignores modifierAltGraph.
+    const getModifierState = event.getModifierState.bind(event)
+    event.getModifierState = (key) =>
+      key === "AltGraph"
+        ? "modifierAltGraph" in row.event && row.event.modifierAltGraph === true
+        : getModifierState(key)
     expect(matchKeybind(parseKeybind(row.config), event)).toBe(row.match)
+  })
+
+  test.each([
+    { event: { key: "х", code: "BracketLeft", ctrlKey: true }, key: "[" },
+    { event: { key: "“", code: "BracketLeft", metaKey: true, altKey: true }, key: "[" },
+    { event: { key: "‘", code: "BracketRight", metaKey: true, altKey: true }, key: "]" },
+  ])("shortcut recording retains the upstream bracket key for $event.key", (row) => {
+    expect(keyFromKeyboardEvent(new KeyboardEvent("keydown", row.event))).toBe(row.key)
   })
 
   // IS_MAC is fixed when the module loads, so each assertion accepts either platform's symbols.

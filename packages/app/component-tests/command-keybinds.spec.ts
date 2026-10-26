@@ -32,6 +32,11 @@ story(
         host.set("custom", "none")
         prevented.push(host.send({ key: "х", code: "BracketLeft", ctrlKey: true }))
         prevented.push(host.send({ key: "х", code: "BracketLeft", ctrlKey: true, isComposing: true }))
+        prevented.push(host.send({ key: "“", code: "BracketLeft", metaKey: true, altKey: true }))
+        prevented.push(host.send({ key: "х", code: "BracketLeft", ctrlKey: true, altKey: true }))
+        prevented.push(
+          host.send({ key: "х", code: "BracketLeft", ctrlKey: true, altKey: true, modifierAltGraph: true }),
+        )
 
         return { selected: host.selected, prevented }
       } finally {
@@ -49,7 +54,9 @@ story(
       "palette",
       "custom",
       "bracket",
+      "alt-bracket",
+      "ctrl-alt-bracket",
     ])
-    expect(result.prevented).toEqual([true, true, true, true, true, true, true, true, true, false])
+    expect(result.prevented).toEqual([true, true, true, true, true, true, true, true, true, false, true, true, false])
   },
 )

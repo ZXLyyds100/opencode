@@ -70,19 +70,17 @@ export function keyFromKeyboardEvent(event: KeyboardEvent) {
 }
 
 function keybindKeysFromKeyboardEvent(event: KeyboardEvent) {
+  if (event.isComposing || event.getModifierState("AltGraph")) return [normalizeKey(event.key)]
+
   const key = keyFromKeyboardEvent(event)
 
-  if (
-    (!event.ctrlKey && !event.metaKey) ||
-    event.altKey ||
-    event.isComposing ||
-    event.getModifierState("AltGraph") ||
-    !/^[^\p{ASCII}\p{Script=Latin}]$/u.test(event.key)
-  )
+  if ((!event.ctrlKey && !event.metaKey) || event.altKey || !/^[^\p{ASCII}\p{Script=Latin}]$/u.test(event.key))
     return [key]
 
   // Keep literal bindings first, then try the physical position on non-Latin layouts.
-  if (/^Key[A-Z]$/.test(event.code)) return [key, event.code.slice(3).toLowerCase()]
+  const literal = normalizeKey(event.key)
+
+  if (/^Key[A-Z]$/.test(event.code)) return [literal, event.code.slice(3).toLowerCase()]
 
   const punctuation = new Map([
     ["Comma", "comma"],
@@ -100,14 +98,16 @@ function keybindKeysFromKeyboardEvent(event: KeyboardEvent) {
 
   const physical = punctuation.get(event.code)
 
-  return physical ? [key, physical] : [key]
+  return physical ? [literal, physical] : [key]
 }
 
-// ⇧[ types { on US layouts; non-Latin positions use the guarded fallback above.
-function bracketKey(event: Pick<KeyboardEvent, "key">) {
+// ⇧[ types { on US layouts, so ⇧⌘[ binds as written; a layout that types no ASCII there falls back to the physical key.
+function bracketKey(event: Pick<KeyboardEvent, "key" | "code">) {
   if (event.key === "{" || event.key === "}") return event.key === "{" ? "[" : "]"
 
-  return event.key
+  if (!/^[^\x00-\x7f]$/u.test(event.key) || !/^Bracket(Left|Right)$/.test(event.code)) return event.key
+
+  return event.code === "BracketLeft" ? "[" : "]"
 }
 
 function signature(key: string, ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {

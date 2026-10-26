@@ -21,6 +21,18 @@ export async function mountCommands() {
       { id: "find", title: "Find", keybind: "ctrl+f", onSelect: () => void selected.push("find") },
       { id: "bracket", title: "Bracket", keybind: "ctrl+[", onSelect: () => void selected.push("bracket") },
       {
+        id: "alt-bracket",
+        title: "Alt bracket",
+        keybind: "meta+alt+[",
+        onSelect: () => void selected.push("alt-bracket"),
+      },
+      {
+        id: "ctrl-alt-bracket",
+        title: "Ctrl Alt bracket",
+        keybind: "ctrl+alt+[",
+        onSelect: () => void selected.push("ctrl-alt-bracket"),
+      },
+      {
         id: "context",
         title: "Context",
         keybind: "ctrl+f",
