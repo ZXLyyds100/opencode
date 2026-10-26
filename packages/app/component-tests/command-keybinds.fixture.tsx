@@ -1,4 +1,4 @@
-// Relative command import is deliberate: Storybook aliases @/shell/commands/command to a no-op.
+// Relative command import is deliberate: the stories harness aliases @/shell/commands/command to a no-op.
 import { DialogProvider } from "@opencode/ui/context/dialog"
 import { render } from "solid-js/web"
 import { PlatformProvider } from "../src/runtime/platform/platform"
@@ -19,6 +19,7 @@ export async function mountCommands() {
     settings.keybinds.set("command.palette", "ctrl+k")
     commands.register("layout-fixture", () => [
       { id: "find", title: "Find", keybind: "ctrl+f", onSelect: () => void selected.push("find") },
+      { id: "bracket", title: "Bracket", keybind: "ctrl+[", onSelect: () => void selected.push("bracket") },
       {
         id: "context",
         title: "Context",

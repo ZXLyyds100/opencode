@@ -15,6 +15,9 @@ const IS_MAC = typeof navigator !== "undefined" && /(Mac|iPod|iPhone|iPad)/.test
 
 const PALETTE_ID = "command.palette"
 
+/** Search commands: Search everything (the palette) limited to commands. */
+export const COMMAND_SEARCH_ID = "commands.search"
+
 export const DEFAULT_PALETTE_KEYBIND = "mod+k,mod+shift+p"
 
 const SUGGESTED_PREFIX = "suggested."
@@ -57,7 +60,7 @@ function normalizeKey(key: string) {
 }
 
 export function keyFromKeyboardEvent(event: KeyboardEvent) {
-  const key = normalizeKey(event.key)
+  const key = normalizeKey(bracketKey(event))
 
   if (!event.altKey || /^[a-z0-9]$/.test(key)) return key
 
@@ -100,6 +103,13 @@ function keybindKeysFromKeyboardEvent(event: KeyboardEvent) {
   return physical ? [key, physical] : [key]
 }
 
+// ⇧[ types { on US layouts; non-Latin positions use the guarded fallback above.
+function bracketKey(event: Pick<KeyboardEvent, "key">) {
+  if (event.key === "{" || event.key === "}") return event.key === "{" ? "[" : "]"
+
+  return event.key
+}
+
 function signature(key: string, ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
   const mask = (ctrl ? 1 : 0) | (meta ? 2 : 0) | (shift ? 4 : 0) | (alt ? 8 : 0)
 
@@ -112,7 +122,7 @@ function signaturesFromEvent(event: KeyboardEvent) {
   )
 }
 
-export type KeybindConfig = string
+type KeybindConfig = string
 
 export interface Keybind {
   key: string
@@ -130,6 +140,8 @@ export interface CommandOption {
   id: string
   title: string
   description?: string
+  /** Extra words the command palette matches, separated by spaces. */
+  keywords?: string
   category?: string
   /** Section of Settings > Shortcuts. Host commands leave it unset and are placed by id prefix. */
   section?: CommandSection
@@ -148,6 +160,8 @@ export interface CommandOption {
   /** The keybind also fires while a text field has focus. */
   editable?: boolean
   when?: (event: KeyboardEvent) => boolean
+  /** The keybind leaves this event to its target, as if the command had no keybind. */
+  skip?: (event: KeyboardEvent) => boolean
   onSelect?: (source?: "palette" | "keybind" | "slash", input?: string) => void | Promise<void>
   onHighlight?: () => (() => void) | void
 }
@@ -159,13 +173,40 @@ export function commandPaletteOptions(options: CommandOption[]) {
   )
 }
 
-export function resolveKeybindOption(candidates: CommandOption[] | undefined, event: KeyboardEvent) {
-  return candidates?.find((option) => option.when?.(event)) ?? candidates?.find((option) => !option.when)
+/** Maps each keybind signature to its commands. A user's own binding comes before a default on the same keys. */
+export function commandKeymap(options: CommandOption[], custom: (id: string) => boolean) {
+  const map = new Map<string, CommandOption[]>()
+
+  for (const option of options) {
+    if (option.id.startsWith(SUGGESTED_PREFIX)) continue
+
+    if (option.disabled) continue
+
+    if (!option.keybind) continue
+
+    const keybinds = parseKeybind(option.keybind)
+
+    for (const kb of keybinds) {
+      if (!kb.key) continue
+      const sig = signature(kb.key, kb.ctrl, kb.meta, kb.shift, kb.alt)
+      const existing = map.get(sig) ?? []
+
+      map.set(sig, custom(actionId(option.id)) ? [option, ...existing] : [...existing, option])
+    }
+  }
+
+  return map
 }
 
-type CommandSource = "palette" | "keybind" | "slash"
+export function resolveKeybindOption(candidates: CommandOption[] | undefined, event: KeyboardEvent) {
+  const live = candidates?.filter((option) => !option.skip?.(event))
 
-export const CommandCatalogItem = Persistence.struct({
+  return live?.find((option) => option.when?.(event)) ?? live?.find((option) => !option.when)
+}
+
+export type CommandSource = "palette" | "keybind" | "slash"
+
+const CommandCatalogItem = Persistence.struct({
   title: Schema.String,
   description: Schema.optional(Schema.String),
   category: Schema.optional(Schema.String),
@@ -175,8 +216,6 @@ export const CommandCatalogItem = Persistence.struct({
   slash: Schema.optional(Schema.String),
   hidden: Schema.optional(Schema.Boolean),
 })
-
-export type CommandCatalogItem = typeof CommandCatalogItem.Type
 
 export const CommandCatalog = Schema.Record(Schema.String, Schema.mutableKey(CommandCatalogItem))
 
@@ -473,34 +512,7 @@ export const { use: useCommand, provider: CommandProvider } = createSimpleContex
       return new Set(keybinds.map((kb) => signature(kb.key, kb.ctrl, kb.meta, kb.shift, kb.alt)))
     })
 
-    const keymap = createMemo(() => {
-      const map = new Map<string, CommandOption[]>()
-
-      for (const option of options()) {
-        if (option.id.startsWith(SUGGESTED_PREFIX)) continue
-
-        if (option.disabled) continue
-
-        if (!option.keybind) continue
-
-        const keybinds = parseKeybind(option.keybind)
-
-        for (const kb of keybinds) {
-          if (!kb.key) continue
-          const sig = signature(kb.key, kb.ctrl, kb.meta, kb.shift, kb.alt)
-          const existing = map.get(sig)
-
-          if (existing) {
-            existing.push(option)
-            continue
-          }
-
-          map.set(sig, [option])
-        }
-      }
-
-      return map
-    })
+    const keymap = createMemo(() => commandKeymap(options(), (id) => settings.keybinds.get(id) !== undefined))
 
     const optionMap = createMemo(() => {
       const map = new Map<string, CommandOption>()
