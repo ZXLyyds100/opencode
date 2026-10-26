@@ -70,9 +70,9 @@ export function keyFromKeyboardEvent(event: KeyboardEvent) {
 }
 
 function keybindKeysFromKeyboardEvent(event: KeyboardEvent) {
-  if (event.isComposing || event.getModifierState("AltGraph")) return [normalizeKey(event.key)]
-
   const key = keyFromKeyboardEvent(event)
+
+  if (event.isComposing || event.getModifierState("AltGraph")) return [key]
 
   if ((!event.ctrlKey && !event.metaKey) || event.altKey || !/^[^\p{ASCII}\p{Script=Latin}]$/u.test(event.key))
     return [key]

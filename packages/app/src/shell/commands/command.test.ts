@@ -144,7 +144,7 @@ describe("command keybinds", () => {
     { config: "ctrl+f", event: { key: "а", code: "KeyF", metaKey: true }, match: false },
     { config: "ctrl+f", event: { key: "а", code: "KeyF", ctrlKey: true, shiftKey: true }, match: false },
     { config: "ctrl+f", event: { key: "а", code: "KeyF", ctrlKey: true, isComposing: true }, match: false },
-    { config: "ctrl+[", event: { key: "х", code: "BracketLeft", ctrlKey: true, isComposing: true }, match: false },
+    { config: "ctrl+[", event: { key: "х", code: "BracketLeft", ctrlKey: true, isComposing: true }, match: true },
     { config: "ctrl+f", event: { key: "Dead", code: "KeyF", ctrlKey: true }, match: false },
     { config: "ctrl+f", event: { key: "Unidentified", code: "KeyF", ctrlKey: true }, match: false },
     // Preserve the bracket fallback that already supports macOS Option and explicit Ctrl+Alt bindings.
@@ -154,6 +154,37 @@ describe("command keybinds", () => {
     {
       config: "ctrl+[",
       event: { key: "х", code: "BracketLeft", ctrlKey: true, modifierAltGraph: true },
+      match: true,
+    },
+    // Guard only the new fallback; existing Alt/bracket normalization still applies.
+    {
+      config: "alt+f",
+      event: { key: "а", code: "KeyF", altKey: true, modifierAltGraph: true },
+      match: true,
+    },
+    {
+      config: "ctrl+alt+f",
+      event: { key: "а", code: "KeyF", ctrlKey: true, altKey: true, modifierAltGraph: true },
+      match: true,
+    },
+    {
+      config: "meta+alt+[",
+      event: { key: "“", code: "BracketLeft", metaKey: true, altKey: true, modifierAltGraph: true },
+      match: true,
+    },
+    {
+      config: "ctrl+alt+[",
+      event: { key: "х", code: "BracketLeft", ctrlKey: true, altKey: true, modifierAltGraph: true },
+      match: true,
+    },
+    {
+      config: "meta+alt+l",
+      event: { key: "¬", code: "KeyL", metaKey: true, altKey: true, isComposing: true },
+      match: true,
+    },
+    {
+      config: "ctrl+f",
+      event: { key: "а", code: "KeyF", ctrlKey: true, modifierAltGraph: true },
       match: false,
     },
   ])("matchKeybind $config with $event.key is $match", (row) => {
