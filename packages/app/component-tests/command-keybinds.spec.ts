@@ -80,3 +80,26 @@ story(
     ])
   },
 )
+
+story("a declining literal or physical command leaves the key to its target", async ({ mount, page }) => {
+  await mount("ui-line-comment--editor")
+
+  const result = await page.evaluate(async (fixture) => {
+    const { mountCommands } = await import(fixture)
+    const host = await mountCommands()
+
+    try {
+      host.set("decline", "ctrl+а")
+      const literal = host.send({ key: "а", code: "KeyF", ctrlKey: true })
+      host.set("decline", "ctrl+f")
+      const physical = host.send({ key: "а", code: "KeyF", ctrlKey: true })
+
+      return { selected: host.selected, prevented: [literal, physical] }
+    } finally {
+      host.dispose()
+    }
+  }, fixture)
+
+  expect(result.selected).toEqual(["decline", "decline"])
+  expect(result.prevented).toEqual([false, false])
+})

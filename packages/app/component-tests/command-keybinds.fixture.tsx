@@ -40,6 +40,16 @@ export async function mountCommands() {
         onSelect: () => void selected.push("context"),
       },
       { id: "custom", title: "Custom", keybind: "none", onSelect: () => void selected.push("custom") },
+      {
+        id: "decline",
+        title: "Decline",
+        keybind: "none",
+        onSelect: () => {
+          selected.push("decline")
+
+          return false
+        },
+      },
       { id: "command.palette", title: "Palette", onSelect: () => void selected.push("palette") },
     ])
 
